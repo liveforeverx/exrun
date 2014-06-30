@@ -1,30 +1,30 @@
 Exrun
 =====
 
-[WiP] Do not use it. As the interface to the functionallity ist not implemented.
+[WiP] Do not use it. As the interface to the functionallity is not implemented.
 
-Something, like advenced runtime_tools for elixir.
+Something, like advanced runtime_tools for elixir.
 
-It is a replacement for dbg, that should be as an dbg distributed over nodes, but with
+It is a subset replacement for dbg for elixir (not a replacment at al), that should be as an dbg distributed over nodes, but with
 overload protection, with possibility to add custom transporters. Very flexible macro-based tracers.
 
 ## Feature Roadmap
 - Tracer
   - Pattern setter
-    - [*] set trace all functions in a module
-    - [*] set trace all module.function with any arity
-    - [*] module.function/arity
-    - [*] set trace for module.function(args...)
-    - [*] set trace module.function(args...) when conditions
+    - [x] set trace all functions in a module
+    - [x] set trace all module.function with any arity
+    - [x] module.function/arity
+    - [x] set trace for module.function(args...)
+    - [x] set trace module.function(args...) when conditions
     - [ ] set trace for send/recive
     - [ ] macro to set trace and start application
   - Printer
-    - [ ] format stacktrace
+    - [x] format stacktrace
   - Distributed
     - [ ] defining a nodes, where should be traced
     - [ ] enviroments-based configuration (for easily multinode setup)
     - [ ] erlang distributed transport
-    - [*] io output
+    - [x] io output
     - [ ] tcp transport
     - [ ] trace to tcp
     - [ ] handle tcp traces
