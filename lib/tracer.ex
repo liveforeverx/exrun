@@ -2,7 +2,7 @@ defmodule Tracer do
   alias Tracer.Pattern
   alias Tracer.Server
 
-  def trace(to_trace, options) do
+  defmacro trace(to_trace, options \\ []) do
     pattern = Pattern.compile(to_trace, options) |> Macro.escape(unquote: true)
     quote do
       Tracer.ensure_server_is_running
@@ -11,7 +11,8 @@ defmodule Tracer do
   end
 
   def trace_off() do
-    send(Server, :exit_tracer)
+    :erlang.trace(:all, :false, [])
+    send(Tracer, :exit_tracer)
   end
 
   def ensure_server_is_running(pid \\ Process.whereis(Tracer))

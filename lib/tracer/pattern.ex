@@ -1,4 +1,4 @@
-defmodule Trace.Pattern do
+defmodule Tracer.Pattern do
   @moduledoc """
     Module for transformation of an Elixir AST to a pattern, that possible to use for tracing
   """
