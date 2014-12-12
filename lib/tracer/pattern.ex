@@ -2,6 +2,10 @@ defmodule Tracer.Pattern do
   @moduledoc """
     Module for transformation of an Elixir AST to a pattern, that possible to use for tracing
   """
+
+  @doc """
+    Compile pattern from elixir AST and options
+  """
   def compile(pattern, options \\ []) do
     exported_opt = Enum.member?(options, :exported)
     {mfa, [{args, conditions, trace_options}]} = compile_intern(pattern)
@@ -30,6 +34,9 @@ defmodule Tracer.Pattern do
     {mfa(module_name), [match_spec]}
   end
 
+  @doc """
+    Apply compiled pattern
+  """
   def set({pattern, match_options, global_options}) do
     :erlang.trace_pattern(pattern, match_options, global_options)
   end

@@ -11,7 +11,9 @@ defmodule Tracer do
   end
 
   def trace_off() do
-    :erlang.trace(:all, :false, [])
+    :erlang.trace(:all, false, [:all])
+    :erlang.trace_pattern({:_,:_,:_}, false, [:local, :meta, :call_count, :call_time])
+    :erlang.trace_pattern({:_,:_,:_}, false, [])
     send(Tracer, :exit_tracer)
   end
 
