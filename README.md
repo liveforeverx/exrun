@@ -15,6 +15,22 @@ iex(1)> import Tracer
 nil
 iex(2)> trace :lists.seq(a, b) when a < 1 and b > 100, node: my_remote_node, limit: %{rate: 1000, time: 1000}
 {:ok, 2}
+iex(3)> :lists.seq(0, 110)
+#PID<0.68.0> call :lists.seq(0, 110)
+#PID<0.68.0> returned :lists.seq/2 -> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, ...]
+iex(4)> trace :erlang.make_tuple, [:stack]
+{:ok, 2}
+iex(5)> Tuple.duplicate(:hello, 3)
+{:hello, :hello, :hello}
+#PID<0.68.0> call :erlang.make_tuple(3, :hello)
+  erl_eval.do_apply/6
+  elixir.erl_eval/3
+  elixir.eval_forms/4
+  IEx.Evaluator.handle_eval/4
+  IEx.Evaluator.eval/2
+  IEx.Evaluator.loop/1
+  IEx.Evaluator.start/2
+#PID<0.68.0> returned :erlang.make_tuple/2 -> {:hello, :hello, :hello}
 ```
 
 More documentation you should refer
