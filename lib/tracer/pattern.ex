@@ -34,13 +34,6 @@ defmodule Tracer.Pattern do
     {mfa(module_name), [match_spec]}
   end
 
-  @doc """
-    Apply compiled pattern
-  """
-  def set({pattern, match_options, global_options}) do
-    :erlang.trace_pattern(pattern, match_options, global_options)
-  end
-
   defp module_name(module_ast), do: Macro.expand(module_ast, __ENV__)
 
   defp mfa(module, function \\ :_, arity \\ :_), do: {module_name(module), function, arity}
