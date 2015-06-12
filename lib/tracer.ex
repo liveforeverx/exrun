@@ -15,16 +15,19 @@ defmodule Tracer do
     * `:node` - specified the node, on which trace should be started.
 
     * `:limit` - specifies the limit, that should be used on collectable process.
-      Limit options are merged with actually setted.
+      Limit options are merged with actually setted. It is possible to specify it
+      per configuration as env `:limit` for application `:exrun`.
 
       The following limit options are available:
 
       * `:time` - specifies the time in miliseconds, where should the rate be
-      applied.
+      applied. Default specified by enviroments. (Default: 1000)
       * `:rate` - specifies the limit of trace messages per time, if trace messages
       will be over this limit, the collectable process will stops and clear all traces.
+      Default specified by enviroments. (Default: 100)
       * `:overall` - set the absolut limit for messages. After reaching this limit, the
-      collactable process will clear all traces ans stopes.
+      collactable process will clear all traces ans stopes. Default specified by enviroments.
+      (Default: nil)
 
     * `:formatter_local` - flag for setting, where formatter process should be started.
     If set to `false`, then the formatter process will be started on remote node, if set
@@ -34,6 +37,9 @@ defmodule Tracer do
     messages to the connected node. If formatter_local set to false, than formatter started
     on remote node and it load all modules from elixir application, because for formating
     traces there should be loaded at least all Inspect modules.
+
+    * `:formatter` - own formatter function, example because you try to trace different
+    inspect function. Formatter is either a fun or tuple `{module, function}`.
 
     * `:stack` - stacktrace for the process call should bу printed
 
@@ -72,23 +78,24 @@ defmodule Tracer do
   end
 
   def trace_run(compiled_pattern, options \\ []) do
-    node = Keyword.get(options, :node, node)
-    limit = Keyword.get(options, :limit, %{})
-    formatter_local = Keyword.get(options, :formatter_local, false)
+    node  = options[:node] || node
+    limit = options[:limit] || (Application.get_env(:exrun, :limit, %{rate: 100, time: 1000}) |> Enum.into(%{}) )
+
+    formatter_options = options |> Keyword.put_new(:formatter_local, false)
     unless Process.get(:__tracer__) do
       Process.put(:__tracer__, %{})
     end
-    check_node(node, formatter_local)
+    check_node(node, formatter_options)
     Collector.ensure_started(node)
     {:group_leader, group_leader} = Process.info(self, :group_leader)
-    Collector.enable(node, group_leader, limit, :all, [:call], formatter_local)
+    Collector.enable(node, group_leader, limit, :all, [:call], formatter_options)
     Collector.trace_pattern(node, compiled_pattern)
   end
 
-  defp bootstrap(node, formatter_local) do
+  defp bootstrap(node, formatter_options) do
     applications = :rpc.call(node, :application, :loaded_applications, [])
     Utils.load_modules(node, [Utils, Collector])
-    unless formatter_local do
+    unless formatter_options[:formatter_local] do
       modules = case :lists.keyfind(:elixir, 1, applications) do
         {:elixir, _, _} ->
           []
@@ -100,7 +107,7 @@ defmodule Tracer do
     end
   end
 
-  defp check_node(node, formatter_local) do
+  defp check_node(node, formatter_options) do
     if node() == node do
       :ok
     else
@@ -112,7 +119,7 @@ defmodule Tracer do
           node_conf
       end
       unless loaded do
-        bootstrap(node, formatter_local)
+        bootstrap(node, formatter_options)
         Process.put(:__tracer__, :maps.put(node, %{node_conf | loaded: true}, tracer_conf))
       end
     end
@@ -121,8 +128,7 @@ defmodule Tracer do
   def get_config(key), do: Process.get(:__tracer__) |> get_in([key])
 
   def trace_off(options \\ []) do
-    node = Keyword.get(options, :node, node)
-    Collector.stop(node)
+    Collector.stop(options[:node] || node)
   end
 
 end

@@ -52,20 +52,18 @@ iex(1)> h Tracer.trace
     - [ ] unsetting of traces
   - Printer
     - [x] format stacktrace
+    - [x] custom formatter
+    - [ ] possibility to add timestamp to default formatter
   - Distributed
     - [x] distributed tracing
     - [x] erlang distributed transport
     - [ ] enviroments-based configuration (for easily multinode setup)
     - [x] io output
-    - [ ] tcp transport
-    - [ ] trace to tcp
-    - [ ] handle tcp traces
-    - [ ] trace to file
-    - [ ] possibility to implement own transportes(like zeromq)
+    - [ ] possibility to implement own transportes(like file, tcp, zeromq)
   - [ ] time feature  (Example, every 1 minute should be time printed or trace messages with, for correlation with other logs and so on)
   - [x] overflow protection as an option
   - CLI
-    - [ ] basic command line interface to invoke preconfigured tracer
+    - [ ] basic command line interface
     - [ ] tracer outputs
     - [ ] define trace nodes from CLI
     - [ ] define tracing patterns from CLI

@@ -4,7 +4,7 @@ defmodule Tracer.Utils do
     calls, made from tracer shouldn't traced too.
   """
 
-  defmacrop waiting(answer, process, mref, timeout \\ 10000) do
+  defmacrop waiting(answer, process, mref, timeout) do
     quote do
       receive do
         unquote(answer) = reply ->
@@ -41,7 +41,6 @@ defmodule Tracer.Utils do
 
   def load_modules(node, module_list \\ [Tracer.Utils]) do
     data = for m <- module_list, do: :code.get_object_code(m)
-    parent = self
     for {m, object_code, filename} <- data do
       ## We need to use :rpc, because on remote node our code may be not loaded and not exists
       {:module, _} = :rpc.call(node, :code, :load_binary, [m, filename, object_code])

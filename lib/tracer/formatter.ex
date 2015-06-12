@@ -2,22 +2,28 @@ defmodule Tracer.Formatter do
   @moduledoc """
     Tracer format and io functions.
   """
-  def start_link(group_leader) do
-    spawn_link(__MODULE__, :init, [group_leader])
+  def start_link(group_leader, formatter) do
+    spawn_link(__MODULE__, :init, [group_leader, formatter])
   end
 
-  def init(group_leader) do
+  def init(group_leader, formatter) do
     :erlang.group_leader(self, group_leader)
-    loop()
+    loop(formatter)
   end
 
-  defp loop() do
+  defp loop(formatter) do
     receive do
+      {:formatter, new_formatter} ->
+        loop(new_formatter)
       msg ->
-        msg |> format_trace |> IO.puts
-        loop()
+        format(msg, formatter) |> IO.puts
+        loop(formatter)
     end
   end
+
+  defp format(msg, nil), do: format_trace(msg)
+  defp format(msg, {m, f}), do: apply(m, f, [msg])
+  defp format(msg, fun) when is_function(fun, 1), do: fun.(msg)
 
   @doc """
     Format trace message to a string.

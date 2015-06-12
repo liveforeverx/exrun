@@ -30,8 +30,13 @@ defmodule Tracer.Pattern do
     {mfa(module, function), [match_spec(args |> transform_arguments |> elem(0))]}
   end
 
-  defp compile_intern(module_name) do
+  defp compile_intern(module_name) when is_atom(module_name) or is_tuple(module_name) do
     {mfa(module_name), [match_spec]}
+  end
+
+  defp compile_intern(pattern) when is_binary(pattern) do
+    {:ok, pattern} = Code.string_to_quoted(pattern)
+    compile_intern(pattern)
   end
 
   defp module_name(module_ast), do: Macro.expand(module_ast, __ENV__)

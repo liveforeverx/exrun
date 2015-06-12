@@ -1,6 +1,5 @@
 defmodule Tracer.Collector do
   alias Tracer.Formatter
-  alias Tracer.Pattern
   import Tracer.Utils
 
   def ensure_started(node) do
@@ -47,9 +46,9 @@ defmodule Tracer.Collector do
     end
   end
 
-  def handle_call({:enable, group_leader, new_limit, processes, trace_options, formatter}, state = %{limit: limit}) do
+  def handle_call({:enable, group_leader, new_limit, processes, trace_options, formatter_opts}, state = %{formatter: formatter, limit: limit}) do
     :erlang.trace(processes, true, [{:tracer, self} | trace_options])
-    { :reply, :ok, %{state | formatter: start_formatter(group_leader, formatter),
+    { :reply, :ok, %{state | formatter: start_formatter(formatter, group_leader, formatter_opts),
                              group_leader: group_leader,
                              limit: :maps.merge(limit, new_limit)} }
   end
@@ -84,13 +83,18 @@ defmodule Tracer.Collector do
     end
   end
 
-  defp start_formatter(group_leader, false) do
-    Formatter.start_link(group_leader)
+  defp start_formatter(nil, group_leader, options) do
+    if options[:formatter_local] do
+      node = :erlang.node(group_leader)
+      :erlang.spawn_link(node, Formatter, :init, [group_leader, options[:formatter]])
+    else
+      Formatter.start_link(group_leader, options[:formatter])
+    end
   end
-
-  defp start_formatter(group_leader, true) do
-    node = :erlang.node(group_leader)
-    :erlang.spawn_link(node, Formatter, :init, [group_leader])
+  defp start_formatter(formatter, group_leader, options) do
+    if new_formatter = options[:formatter] do
+      send(formatter, {:formatter, new_formatter})
+    end
+    formatter
   end
-
 end
