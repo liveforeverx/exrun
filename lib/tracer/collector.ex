@@ -54,7 +54,8 @@ defmodule Tracer.Collector do
   end
 
   def handle_call({:set, pattern}, state) do
-    {pattern, match_options, global_options} = pattern
+    {{module, _, _} = pattern, match_options, global_options} = pattern
+    module.module_info()
     result = :erlang.trace_pattern(pattern, match_options, global_options)
     {:reply, result, state}
   end
