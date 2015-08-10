@@ -3,27 +3,28 @@ defmodule Exrun.Mixfile do
 
   def project do
     [app: :exrun,
-     version: "0.1.0-dev",
-     deps: deps]
+     version: "0.1.0",
+     source_url: "https://github.com/liveforeverx/exrun",
+     name: "Exrun",
+     deps: deps,
+     description: description,
+     package: package]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type `mix help compile.app` for more information
   def application do
     [applications: []]
   end
 
-  # Dependencies can be hex.pm packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1"}
-  #
-  # Type `mix help deps` for more examples and options
   defp deps do
     []
+  end
+
+  defp description do
+    "Elixir - save and easy to use, tracing tools for running elixir and erlang applications"
+  end
+
+  defp package do
+    [contributors: ["Dmitry Russ(Aleksandrov)"],
+     links: %{"Github" => "https://github.com/liveforeverx/exrun"}]
   end
 end
