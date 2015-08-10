@@ -3,7 +3,7 @@ defmodule Exrun.Mixfile do
 
   def project do
     [app: :exrun,
-     version: "0.1.0-dev",
+     version: "0.1.0",
      deps: deps]
   end
 
