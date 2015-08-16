@@ -20,13 +20,13 @@ defmodule Tracer do
 
       The following limit options are available:
 
-      * `:time` - specifies the time in miliseconds, where should the rate be
-      applied. Default specified by enviroments. (Default: 1000)
+      * `:time` - specifies the time in milliseconds, where should the rate be
+      applied. Default specified by environments. (Default: 1000)
       * `:rate` - specifies the limit of trace messages per time, if trace messages
-      will be over this limit, the collectable process will stops and clear all traces.
-      Default specified by enviroments. (Default: 100)
-      * `:overall` - set the absolut limit for messages. After reaching this limit, the
-      collactable process will clear all traces ans stopes. Default specified by enviroments.
+      will be over this limit, the collectable process will stop and clear all traces.
+      Default specified by environments. (Default: 100)
+      * `:overall` - set the absolute limit for messages. After reaching this limit, the
+      collactable process will clear all traces and stops. Default specified by environments.
       (Default: nil)
 
     * `:formatter_local` - flag for setting, where formatter process should be started.
@@ -35,13 +35,13 @@ defmodule Tracer do
     where elixir is not installed. If formatter_local set to true, there will be only 2
     modules loaded on remote erlang node (Tracer.Utils and Tracer.Collector), which forward
     messages to the connected node. If formatter_local set to false, than formatter started
-    on remote node and it load all modules from elixir application, because for formating
+    on remote node and it load all modules from elixir application, because for formatting
     traces there should be loaded at least all Inspect modules.
 
     * `:formatter` - own formatter function, example because you try to trace different
     inspect function. Formatter is either a fun or tuple `{module, function}`.
 
-    * `:stack` - stacktrace for the process call should bу printed
+    * `:stack` - stacktrace for the process call should be printed
 
     * `:exported` - only exported functions should be printed.
 

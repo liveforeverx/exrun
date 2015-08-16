@@ -5,9 +5,9 @@ Version: 0.1.0
 
 Something, like advanced runtime_tools for elixir.
 
-There is another great tool [dbg](https://github.com/fishcakez/dbg), which is based on erlang [dbg](http://erlang.org/doc/man/dbg.html). Why another debugging tool? At first, the tracing setter is implemented as macro, because it allows to use native elixir macro capabilites to capture call in natural syntax (with arguments and conditions, see more examples and tests).
+There is another great tool [dbg](https://github.com/fishcakez/dbg), which is based on erlang [dbg](http://erlang.org/doc/man/dbg.html). Why another debugging tool? At first, the tracing setter is implemented as macro, because it allows to use native elixir macro capabilities to capture call in natural syntax (with arguments and conditions, see more examples and tests).
 
-Second is, safity, the tracer comes with possibility to ratelimit tracer with absolut and relative to a time values. Default configuration is to disable tracing with a output rate more, than 100 messages in a second. That why `Tracer` was built.
+Second is, safety, the tracer comes with possibility to ratelimit tracer with absolute and relative to time values. Default configuration is to disable tracing with a output rate more, than 100 messages in a second. That's why `Tracer` was built.
 
 Another difference, is, that in some cases your will need to debug, different functions on different nodes, that it is possible to trace different functions on different nodes.
 
@@ -59,7 +59,7 @@ iex(1)> h Tracer.trace
     - [x] module.function/arity
     - [x] set trace for module.function(args...)
     - [x] set trace module.function(args...) when conditions
-    - [ ] set trace for send/recive
+    - [ ] set trace for send/receive
     - [x] macro to set trace
     - [ ] unsetting of traces
   - Printer
@@ -69,9 +69,9 @@ iex(1)> h Tracer.trace
   - Distributed
     - [x] distributed tracing
     - [x] erlang distributed transport
-    - [ ] enviroments-based configuration (for easily multinode setup)
+    - [ ] environments-based configuration (for easily multinode setup)
     - [x] io output
-    - [x] possibility to implement own transportes(like file, tcp, zeromq), use formatters
+    - [x] possibility to implement own transports(like file, tcp, zeromq), use formatters
   - [ ] time feature  (Example, every 1 minute should be time printed or trace messages with, for correlation with other logs and so on)
   - [x] overflow protection as an option
   - CLI
