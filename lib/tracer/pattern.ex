@@ -90,6 +90,7 @@ defmodule Tracer.Pattern do
     {Macro.expand(alias_ast, __ENV__), map}
   end
 
+  defp transform_arguments({:_, _, _}, map, :save), do: {:_, map}
   defp transform_arguments({atom, _, _}, %{count: count} = map, :save) do
     {count, new_map} =
       case Map.fetch(map, atom) do

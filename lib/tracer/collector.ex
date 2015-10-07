@@ -92,7 +92,7 @@ defmodule Tracer.Collector do
       Formatter.start_link(group_leader, options[:formatter])
     end
   end
-  defp start_formatter(formatter, group_leader, options) do
+  defp start_formatter(formatter, _group_leader, options) do
     if new_formatter = options[:formatter] do
       send(formatter, {:formatter, new_formatter})
     end

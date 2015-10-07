@@ -58,6 +58,10 @@ defmodule Tracer.PatternTest do
       == {{Mod,:test,:_}, [:'$1'], [{:==, :"$1", {:unquote, [], [{:a, [], Tracer.PatternTest}]}}]}
   end
 
+  test "injecting _ in function for ignoring arguments" do
+    assert Pattern.compile(quote do: Mod.test(:test, _, _)) |> simple == {{Mod,:test,:_}, [:test, :_, :_], []}
+  end
+
   defp simple({mfa, [{args, conditions, _}], _}), do: {mfa, args, conditions}
   defp with_options({mfa, [{args, conditions, _}], options}), do: {mfa, args, conditions, options}
 end
