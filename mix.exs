@@ -16,11 +16,12 @@ defmodule Exrun.Mixfile do
   end
 
   defp deps do
-    []
+    [{:earmark, "~> 0.1", only: :dev},
+     {:ex_doc, "~> 0.10", only: :dev}]
   end
 
   defp description do
-    "Elixir - save and easy to use, tracing tools for running elixir and erlang applications"
+    "Elixir - save and easy to use standalone, tracing tools for running elixir and erlang applications"
   end
 
   defp package do
