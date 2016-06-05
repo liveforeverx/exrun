@@ -3,7 +3,7 @@ defmodule Exrun.Mixfile do
 
   def project do
     [app: :exrun,
-     version: "0.1.1",
+     version: "0.1.2",
      source_url: "https://github.com/liveforeverx/exrun",
      name: "Exrun",
      deps: deps,
@@ -25,7 +25,8 @@ defmodule Exrun.Mixfile do
   end
 
   defp package do
-    [contributors: ["Dmitry Russ(Aleksandrov)"],
+    [maintainers: ["Dmitry Russ(Aleksandrov)"],
+     licenses: ["Apache 2.0"],
      links: %{"Github" => "https://github.com/liveforeverx/exrun"}]
   end
 end

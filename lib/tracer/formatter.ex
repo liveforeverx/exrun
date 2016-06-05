@@ -1,6 +1,6 @@
 defmodule Tracer.Formatter do
   @moduledoc """
-    Tracer format and io functions.
+  Tracer format and io functions.
   """
   def start_link(group_leader, formatter) do
     spawn_link(__MODULE__, :init, [group_leader, formatter])
@@ -26,7 +26,7 @@ defmodule Tracer.Formatter do
   defp format(msg, fun) when is_function(fun, 1), do: fun.(msg)
 
   @doc """
-    Format trace message to a string.
+  Format trace message to a string.
   """
   def format_trace({:trace, pid, :call, mfa}) do
     "#{inspect pid} call #{call_mfa(mfa)}"

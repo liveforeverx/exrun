@@ -1,10 +1,10 @@
 defmodule Tracer.Pattern do
   @moduledoc """
-    Module for transformation of an Elixir AST to a pattern, that possible to use for tracing
+  Module for transformation of an Elixir AST to a pattern, that possible to use for tracing
   """
 
   @doc """
-    Compile pattern from elixir AST and options
+  Compile pattern from elixir AST and options
   """
   def compile(pattern, options \\ []) do
     exported_opt = Enum.member?(options, :exported)

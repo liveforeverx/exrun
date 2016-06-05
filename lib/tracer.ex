@@ -127,8 +127,30 @@ defmodule Tracer do
 
   def get_config(key), do: Process.get(:__tracer__) |> get_in([key])
 
+  @doc """
+  Stop tracing
+  """
   def trace_off(options \\ []) do
     Collector.stop(options[:node] || node)
   end
 
+  @doc """
+  Scheduler usage based on scheduler wall time.
+  """
+  def scheduler_usage(interval \\ 1000) when is_integer(interval) do
+    original_flag = :erlang.system_flag(:scheduler_wall_time, true)
+    start_slice = :erlang.statistics(:scheduler_wall_time)
+    :timer.sleep(interval)
+    end_slice = :erlang.statistics(:scheduler_wall_time)
+    original_flag || :erlang.system_flag(:scheduler_wall_time, original_flag)
+    scheduler_usage(Enum.sort(start_slice), Enum.sort(end_slice))
+  end
+
+  ## In this case we can ignore tail-call
+  defp scheduler_usage([], []),
+    do: []
+  defp scheduler_usage([{i, _, t} | next1], [{i, _, t} | next2]),
+    do: [{i, 0.0} | scheduler_usage(next1, next2)]
+  defp scheduler_usage([{i, a_start, t_start} | next1], [{i, a_end, t_end} | next2]),
+    do: [{i, (a_start - a_end) / (t_start - t_end)} | scheduler_usage(next1, next2)]
 end

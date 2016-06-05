@@ -1,7 +1,7 @@
 defmodule Tracer.Utils do
   @moduledoc """
-    Some utils functions and reimplemmenting some usefull functions, because if they traced, the
-    calls, made from tracer shouldn't traced too.
+  Some utils functions and reimplemmenting some usefull functions, because if they traced, the
+  calls, made from tracer shouldn't traced too.
   """
 
   defmacrop waiting(answer, process, mref, timeout) do
