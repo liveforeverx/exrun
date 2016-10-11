@@ -1,3 +1,8 @@
+# 0.1.3
+
+* Enhancements
+  * print time used for function call
+
 # 0.1.2
 
 * Enhancements

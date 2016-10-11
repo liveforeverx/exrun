@@ -1,4 +1,7 @@
 defmodule Exrun do
+  @moduledoc """
+  Generall functions for introspection of running elixir/erlang system
+  """
   use Application
 
   @doc false

@@ -88,7 +88,7 @@ defmodule Tracer do
     check_node(node, formatter_options)
     Collector.ensure_started(node)
     {:group_leader, group_leader} = Process.info(self, :group_leader)
-    Collector.enable(node, group_leader, limit, :all, [:call], formatter_options)
+    Collector.enable(node, group_leader, limit, :all, [:call, :timestamp], formatter_options)
     Collector.trace_pattern(node, compiled_pattern)
   end
 

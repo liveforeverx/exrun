@@ -3,7 +3,7 @@ defmodule Exrun.Mixfile do
 
   def project do
     [app: :exrun,
-     version: "0.1.2",
+     version: "0.1.3",
      source_url: "https://github.com/liveforeverx/exrun",
      name: "Exrun",
      deps: deps,

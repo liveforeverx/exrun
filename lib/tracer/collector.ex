@@ -26,7 +26,7 @@ defmodule Tracer.Collector do
 
   def init(parent) do
     :erlang.monitor(:process, parent)
-    loop(%{parent: parent, formatter: nil, group_leader: nil,
+    loop(%{parent: parent, formatter: nil, group_leader: nil, collect_state: %{},
            limit: %{time: nil, rate: nil, overall: nil}, window: :os.timestamp(), count: 0, all_count: 0})
   end
 
@@ -71,17 +71,39 @@ defmodule Tracer.Collector do
     exit({:shutdown, :stop})
   end
 
-  def handle_trace(trace, %{limit: limit, formatter: formatter, window: window, count: count, all_count: all} = state) when (elem(trace, 0) == :trace) do
+  def handle_trace(trace, state) when (elem(trace, 0) == :trace_ts) do
+    %{limit: limit, formatter: formatter,
+      window: window, count: count,
+      all_count: all, collect_state: collect_state} = state
+    {trace, collect_state} = collect(trace, collect_state)
     send(formatter, trace)
     %{time: time, rate: rate, overall: overall} = limit
     now = :os.timestamp()
     delay = :timer.now_diff(now, window) |> div(1000)
     cond do
       all > overall -> stop()
-      delay > time  -> %{state | window: now, count: 0, all_count: all + 1}
+      delay > time  -> %{state | collect_state: collect_state, window: now, count: 0, all_count: all + 1}
       rate <= count -> stop()
-      rate > count  -> %{state | count: count + 1, all_count: all + 1}
+      rate > count  -> %{state | collect_state: collect_state, count: count + 1, all_count: all + 1}
     end
+  end
+
+  defp collect({:trace_ts, pid, :call, {mod, fun, args}, timestamp} = trace, collect_state) do
+    {trace, Map.update(collect_state, {pid, {mod, fun, length(args)}}, [timestamp], &([timestamp | &1]))}
+  end
+  defp collect({:trace_ts, pid, type, mfa, _return, timestamp} = trace, collect_state)
+   when type in [:exception_from, :return_from] do
+    {start_ts, collect_state} = Map.get_and_update(collect_state, {pid, mfa}, fn([last | tail]) ->
+      case tail do
+        [] -> {last, :pop}
+        _  -> {last, tail}
+      end
+    end)
+    time_used = with {_, _, _} <- start_ts, do: :timer.now_diff(timestamp, start_ts)
+    {put_elem(trace, 5, time_used), collect_state}
+  end
+  defp collect(trace, collect_state) do
+    {trace, collect_state}
   end
 
   defp start_formatter(nil, group_leader, options) do
