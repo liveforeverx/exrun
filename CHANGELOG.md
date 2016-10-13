@@ -1,3 +1,8 @@
+# 0.1.4
+
+* Bug fixes
+  * set collector state correct for using with dump
+
 # 0.1.3
 
 * Enhancements

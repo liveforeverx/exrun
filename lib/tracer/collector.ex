@@ -91,6 +91,9 @@ defmodule Tracer.Collector do
   defp collect({:trace_ts, pid, :call, {mod, fun, args}, timestamp} = trace, collect_state) do
     {trace, Map.update(collect_state, {pid, {mod, fun, length(args)}}, [timestamp], &([timestamp | &1]))}
   end
+  defp collect({:trace_ts, pid, :call, {mod, fun, args}, _dump, timestamp} = trace, collect_state) do
+    {trace, Map.update(collect_state, {pid, {mod, fun, length(args)}}, [timestamp], &([timestamp | &1]))}
+  end
   defp collect({:trace_ts, pid, type, mfa, _return, timestamp} = trace, collect_state)
    when type in [:exception_from, :return_from] do
     {start_ts, collect_state} = Map.get_and_update(collect_state, {pid, mfa}, fn([last | tail]) ->
