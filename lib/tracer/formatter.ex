@@ -7,7 +7,7 @@ defmodule Tracer.Formatter do
   end
 
   def init(group_leader, formatter) do
-    :erlang.group_leader(self, group_leader)
+    :erlang.group_leader(self(), group_leader)
     loop(formatter)
   end
 

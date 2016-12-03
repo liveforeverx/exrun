@@ -27,7 +27,7 @@ defmodule Tracer.Utils do
     pid = get_process(identifier)
     mref = Process.monitor(pid)
     try do
-      Process.send(pid, {{self, mref}, request}, [:noconnect])
+      Process.send(pid, {{self(), mref}, request}, [:noconnect])
     catch
       _, _ -> :ok
     end
@@ -49,11 +49,11 @@ defmodule Tracer.Utils do
   end
 
   def rpc(node, module, function, args, timeout \\ 5000) do
-    tag = make_ref
+    tag = make_ref()
     pid = if node() == node do
-            spawn(Tracer.Utils, :rpc_local, [self, tag, module, function, args])
+            spawn(Tracer.Utils, :rpc_local, [self(), tag, module, function, args])
           else
-            :erlang.spawn(node, Tracer.Utils, :rpc_local, [self, tag, module, function, args])
+            :erlang.spawn(node, Tracer.Utils, :rpc_local, [self(), tag, module, function, args])
           end
     mref = Process.monitor(pid)
     waiting({^tag, _}, pid, mref, timeout) |> elem(1)

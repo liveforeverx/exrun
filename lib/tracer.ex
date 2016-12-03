@@ -78,7 +78,7 @@ defmodule Tracer do
   end
 
   def trace_run(compiled_pattern, options \\ []) do
-    node  = options[:node] || node
+    node  = options[:node] || node()
     limit = options[:limit] || (Application.get_env(:exrun, :limit, %{rate: 100, time: 1000}) |> Enum.into(%{}) )
 
     formatter_options = options |> Keyword.put_new(:formatter_local, false)
@@ -87,7 +87,7 @@ defmodule Tracer do
     end
     check_node(node, formatter_options)
     Collector.ensure_started(node)
-    {:group_leader, group_leader} = Process.info(self, :group_leader)
+    {:group_leader, group_leader} = Process.info(self(), :group_leader)
     Collector.enable(node, group_leader, limit, :all, [:call, :timestamp], formatter_options)
     Collector.trace_pattern(node, compiled_pattern)
   end
@@ -131,7 +131,7 @@ defmodule Tracer do
   Stop tracing
   """
   def trace_off(options \\ []) do
-    Collector.stop(options[:node] || node)
+    Collector.stop(options[:node] || node())
   end
 
   @doc """

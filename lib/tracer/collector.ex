@@ -9,8 +9,8 @@ defmodule Tracer.Collector do
     end
   end
 
-  def start(node \\ node) do
-    pid = :erlang.spawn(node, __MODULE__, :init, [self])
+  def start(node \\ node()) do
+    pid = :erlang.spawn(node, __MODULE__, :init, [self()])
     {rpc(node, :erlang, :register, [__MODULE__, pid]), node}
   end
 
@@ -36,18 +36,18 @@ defmodule Tracer.Collector do
         {action, answer, new_state} = handle_call(msg, state)
         send(pid, {ref, answer})
         case action do
-          :stop  -> stop
+          :stop  -> stop()
           :reply -> loop(new_state)
         end
       {:DOWN, _, _, ^parent, _} ->
-        stop
+        stop()
       msg ->
         handle_trace(msg, state) |> loop()
     end
   end
 
   def handle_call({:enable, group_leader, new_limit, processes, trace_options, formatter_opts}, state = %{formatter: formatter, limit: limit}) do
-    :erlang.trace(processes, true, [{:tracer, self} | trace_options])
+    :erlang.trace(processes, true, [{:tracer, self()} | trace_options])
     { :reply, :ok, %{state | formatter: start_formatter(formatter, group_leader, formatter_opts),
                              group_leader: group_leader,
                              limit: :maps.merge(limit, new_limit)} }

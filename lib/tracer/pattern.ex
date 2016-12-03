@@ -31,7 +31,7 @@ defmodule Tracer.Pattern do
   end
 
   defp compile_intern(module_name) when is_atom(module_name) or is_tuple(module_name) do
-    {mfa(module_name), [match_spec]}
+    {mfa(module_name), [match_spec()]}
   end
 
   defp compile_intern(pattern) when is_binary(pattern) do
@@ -44,8 +44,8 @@ defmodule Tracer.Pattern do
   defp mfa(module, function \\ :_, arity \\ :_), do: {module_name(module), function, arity}
 
   defp match_spec(args \\ :_, conditions \\ [])
-  defp match_spec([], conditions),   do: {:_, conditions, trace_options}
-  defp match_spec(args, conditions), do: {args, conditions, trace_options}
+  defp match_spec([], conditions),   do: {:_, conditions, trace_options()}
+  defp match_spec(args, conditions), do: {args, conditions, trace_options()}
 
   defp trace_options, do: [{:return_trace}, {:exception_trace}]
 

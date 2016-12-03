@@ -6,6 +6,6 @@ defmodule Exrun do
 
   @doc false
   def start(_type, []) do
-    Tracer.Supervisor.start_link
+    {:ok, self()}
   end
 end
