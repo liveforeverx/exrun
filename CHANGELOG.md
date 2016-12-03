@@ -1,3 +1,8 @@
+# 0.1.5
+
+* Enhancements
+  * remove warnings for elixir v1.4
+
 # 0.1.4
 
 * Bug fixes
