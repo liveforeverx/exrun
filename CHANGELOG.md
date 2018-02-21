@@ -1,3 +1,13 @@
+# 0.1.6
+
+* Enhancements
+  * remove warnings for elixir v1.6
+  * add `Runtime` introspection module with some basic functions for inspection
+    ** util allocators
+    ** memory usage of processors
+    ** scheduler usage
+  * output format for `:stack` option changed, now erlang modules has `:` as in shell
+
 # 0.1.5
 
 * Enhancements
