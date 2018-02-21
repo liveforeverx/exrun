@@ -72,21 +72,25 @@ defmodule Tracer do
   """
   defmacro trace(to_trace, options \\ []) do
     pattern = Pattern.compile(to_trace, options) |> Macro.escape(unquote: true)
+
     quote do
       Tracer.trace_run(unquote(pattern), unquote(options))
     end
   end
 
   def trace_run(compiled_pattern, options \\ []) do
-    node  = options[:node] || node()
-    limit = options[:limit] || (Application.get_env(:exrun, :limit, %{rate: 100, time: 1000}) |> Enum.into(%{}) )
+    node = options[:node] || node()
+
+    limit =
+      options[:limit] ||
+        Application.get_env(:exrun, :limit, %{rate: 100, time: 1000}) |> Enum.into(%{})
 
     formatter_options = options |> Keyword.put_new(:formatter_local, false)
-    unless Process.get(:__tracer__) do
-      Process.put(:__tracer__, %{})
-    end
+    unless Process.get(:__tracer__), do: Process.put(:__tracer__, %{})
+
     check_node(node, formatter_options)
     Collector.ensure_started(node)
+
     {:group_leader, group_leader} = Process.info(self(), :group_leader)
     Collector.enable(node, group_leader, limit, :all, [:call, :timestamp], formatter_options)
     Collector.trace_pattern(node, compiled_pattern)
@@ -95,14 +99,18 @@ defmodule Tracer do
   defp bootstrap(node, formatter_options) do
     applications = :rpc.call(node, :application, :loaded_applications, [])
     Utils.load_modules(node, [Utils, Collector])
+
     unless formatter_options[:formatter_local] do
-      modules = case :lists.keyfind(:elixir, 1, applications) do
-        {:elixir, _, _} ->
-          []
-        _ ->
-          {:ok, modules} = :application.get_key(:elixir, :modules)
-          modules
-      end
+      modules =
+        case :lists.keyfind(:elixir, 1, applications) do
+          {:elixir, _, _} ->
+            []
+
+          _ ->
+            {:ok, modules} = :application.get_key(:elixir, :modules)
+            modules
+        end
+
       Utils.load_modules(node, [Tracer.Formatter | modules])
     end
   end
@@ -112,13 +120,14 @@ defmodule Tracer do
       :ok
     else
       tracer_conf = Process.get(:__tracer__)
-      node_conf = %{loaded: loaded} = case :maps.get(node, tracer_conf, nil) do
-        nil ->
-          %{loaded: false}
-        node_conf ->
-          node_conf
-      end
-      unless loaded do
+
+      node_conf =
+        case :maps.get(node, tracer_conf, nil) do
+          nil -> %{loaded: false}
+          node_conf -> node_conf
+        end
+
+      unless node_conf.loaded do
         bootstrap(node, formatter_options)
         Process.put(:__tracer__, :maps.put(node, %{node_conf | loaded: true}, tracer_conf))
       end
@@ -133,24 +142,4 @@ defmodule Tracer do
   def trace_off(options \\ []) do
     Collector.stop(options[:node] || node())
   end
-
-  @doc """
-  Scheduler usage based on scheduler wall time.
-  """
-  def scheduler_usage(interval \\ 1000) when is_integer(interval) do
-    original_flag = :erlang.system_flag(:scheduler_wall_time, true)
-    start_slice = :erlang.statistics(:scheduler_wall_time)
-    :timer.sleep(interval)
-    end_slice = :erlang.statistics(:scheduler_wall_time)
-    original_flag || :erlang.system_flag(:scheduler_wall_time, original_flag)
-    scheduler_usage(Enum.sort(start_slice), Enum.sort(end_slice))
-  end
-
-  ## In this case we can ignore tail-call
-  defp scheduler_usage([], []),
-    do: []
-  defp scheduler_usage([{i, _, t} | next1], [{i, _, t} | next2]),
-    do: [{i, 0.0} | scheduler_usage(next1, next2)]
-  defp scheduler_usage([{i, a_start, t_start} | next1], [{i, a_end, t_end} | next2]),
-    do: [{i, (a_start - a_end) / (t_start - t_end)} | scheduler_usage(next1, next2)]
 end

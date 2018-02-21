@@ -9,6 +9,7 @@ defmodule Tracer.Pattern do
   def compile(pattern, options \\ []) do
     exported_opt = Enum.member?(options, :exported)
     {mfa, [{args, conditions, trace_options}]} = compile_intern(pattern)
+
     {
       mfa,
       [{args, conditions, set_trace_options(options, trace_options)}],
@@ -44,12 +45,12 @@ defmodule Tracer.Pattern do
   defp mfa(module, function \\ :_, arity \\ :_), do: {module_name(module), function, arity}
 
   defp match_spec(args \\ :_, conditions \\ [])
-  defp match_spec([], conditions),   do: {:_, conditions, trace_options()}
+  defp match_spec([], conditions), do: {:_, conditions, trace_options()}
   defp match_spec(args, conditions), do: {args, conditions, trace_options()}
 
   defp trace_options, do: [{:return_trace}, {:exception_trace}]
 
-  defp set_transform_opions(true),  do: []
+  defp set_transform_opions(true), do: []
   defp set_transform_opions(false), do: [:local]
 
   defp set_trace_options([], args), do: args
@@ -69,16 +70,18 @@ defmodule Tracer.Pattern do
   defp transform_arguments(args, map \\ %{count: 1}, action \\ :save)
 
   defp transform_arguments(args, map, action) when is_list(args) do
-    {new_args, new_map} = Enum.reduce(args, {[], map}, fn(arg, {acc, map}) ->
-      {arg, new_map} = transform_arguments(arg, map, action)
-      {[arg | acc], new_map}
-    end)
+    {new_args, new_map} =
+      Enum.reduce(args, {[], map}, fn arg, {acc, map} ->
+        {arg, new_map} = transform_arguments(arg, map, action)
+        {[arg | acc], new_map}
+      end)
+
     {Enum.reverse(new_args), new_map}
   end
 
-  defp transform_arguments({type, _, args}, map, action) when type in [:'{}', :'<<>>', :'%{}'] do
+  defp transform_arguments({type, _, args}, map, action) when type in [:{}, :<<>>, :%{}] do
     {args, new_map} = transform_arguments(args, map, action)
-    {(transform_back_fun(type)).(args), new_map}
+    {transform_back_fun(type).(args), new_map}
   end
 
   defp transform_arguments({key, value}, map, action) do
@@ -91,65 +94,101 @@ defmodule Tracer.Pattern do
   end
 
   defp transform_arguments({:_, _, _}, map, :save), do: {:_, map}
+
   defp transform_arguments({atom, _, _}, %{count: count} = map, :save) do
     {count, new_map} =
       case Map.fetch(map, atom) do
         {:ok, exists_id} ->
           {exists_id, map}
+
         :error ->
           {count, Enum.into([{:count, count + 1}, {atom, count}], map)}
       end
-    {("$#{count}" |> String.to_atom), new_map}
+
+    {:"$#{count}", new_map}
   end
 
   defp transform_arguments({atom, _, _} = var, map, :restore) do
-    value = case Map.fetch(map, atom) do
-      {:ok, value} ->
-        "$#{value}" |> String.to_atom
-      :error ->
-        {:unquote, [], [quote do: unquote(var)]}
-    end
+    value =
+      case Map.fetch(map, atom) do
+        {:ok, value} -> :"$#{value}"
+        :error -> {:unquote, [], [quote(do: unquote(var))]}
+      end
+
     {value, map}
   end
 
-  defp transform_arguments(arg, map, _action) when is_atom(arg) or
-                                          is_number(arg) or
-                                          is_binary(arg) do
+  defp transform_arguments(arg, map, _action)
+       when is_atom(arg) or is_number(arg) or is_binary(arg) do
     {arg, map}
   end
 
-  defp transform_back_fun(:'{}'),   do: &List.to_tuple/1
-  defp transform_back_fun(:'<<>>'), do: &List.to_string/1
-  defp transform_back_fun(:'%{}'),  do: &:maps.from_list/1
+  defp transform_back_fun(:{}), do: &List.to_tuple/1
+  defp transform_back_fun(:<<>>), do: &List.to_string/1
+  defp transform_back_fun(:%{}), do: &:maps.from_list/1
 
-  @function [ :is_atom, :is_float, :is_integer, :is_list, :is_number, :is_map,
-              :is_pid, :is_port, :is_reference, :is_tuple, :is_binary, :is_boolean,
-              :abs, :hd, :length, :round, :tl, :trunc, :not ]
+  @function [
+    :is_atom,
+    :is_float,
+    :is_integer,
+    :is_list,
+    :is_number,
+    :is_map,
+    :is_pid,
+    :is_port,
+    :is_reference,
+    :is_tuple,
+    :is_binary,
+    :is_boolean,
+    :abs,
+    :hd,
+    :length,
+    :round,
+    :tl,
+    :trunc,
+    :not
+  ]
   defp transform_conditions({name, _, [var]}, map) when name in @function do
     {name, transform_conditions(var, map)}
   end
 
-  @operators [{:and, :andalso}, {:or, :orelse}, :xor, :>, :>=, :<, {:<=, :'=<'}, :==,
-              {:===, :'=:='}, {:!=, :'/='}, {:!==, :'=/='}, :+, :-, :*, {:/, :div},
-              :rem ]
-  Enum.map(@operators,
-    fn({elixir_op, erlang_op}) ->
-        defp transform_conditions({unquote(elixir_op), _, [left, right]}, map) do
-          {unquote(erlang_op), transform_conditions(left, map), transform_conditions(right, map)}
-        end
-      (op) ->
-        defp transform_conditions({unquote(op), _, [left, right]}, map) do
-          {unquote(op), transform_conditions(left, map), transform_conditions(right, map)}
-        end
-    end)
+  @operators [
+    {:and, :andalso},
+    {:or, :orelse},
+    :xor,
+    :>,
+    :>=,
+    :<,
+    {:<=, :"=<"},
+    :==,
+    {:===, :"=:="},
+    {:!=, :"/="},
+    {:!==, :"=/="},
+    :+,
+    :-,
+    :*,
+    {:/, :div},
+    :rem
+  ]
+  Enum.map(@operators, fn
+    {elixir_op, erlang_op} ->
+      defp transform_conditions({unquote(elixir_op), _, [left, right]}, map) do
+        {unquote(erlang_op), transform_conditions(left, map), transform_conditions(right, map)}
+      end
 
-  defp transform_conditions({ :elem, _, [var, index]}, map) do
-    { :element, index + 1, transform_conditions(var, map) }
+    op ->
+      defp transform_conditions({unquote(op), _, [left, right]}, map) do
+        {unquote(op), transform_conditions(left, map), transform_conditions(right, map)}
+      end
+  end)
+
+  defp transform_conditions({:elem, _, [var, index]}, map) do
+    {:element, index + 1, transform_conditions(var, map)}
   end
 
-  @function [ :node, :self ]
-  defp transform_conditions({ name, _, [] }, _) when name in @function do
-    { name }
+  @function [:node, :self]
+  defp transform_conditions({name, _, []}, _) when name in @function do
+    {name}
   end
 
   defp transform_conditions(data, map) do

@@ -10,15 +10,18 @@ defmodule Tracer.Utils do
         unquote(answer) = reply ->
           Process.demonitor(unquote(mref), [:flush])
           reply
+
         {:DOWN, ^unquote(mref), _, _, :noconnection} ->
           IO.inspect({:get_down, :noconnection})
           exit({:nodedown, node(unquote(process))})
+
         {:DOWN, ^unquote(mref), _, _, reason} ->
           IO.inspect({:get_down, reason})
           exit(reason)
-      after unquote(timeout) ->
-        Process.demonitor(unquote(mref), [:flush])
-        exit(:timeout)
+      after
+        unquote(timeout) ->
+          Process.demonitor(unquote(mref), [:flush])
+          exit(:timeout)
       end
     end
   end
@@ -26,11 +29,13 @@ defmodule Tracer.Utils do
   def call(identifier, request, timeout \\ 10000) do
     pid = get_process(identifier)
     mref = Process.monitor(pid)
+
     try do
       Process.send(pid, {{self(), mref}, request}, [:noconnect])
     catch
       _, _ -> :ok
     end
+
     {_, reply} = waiting({^mref, _}, pid, mref, timeout)
     {:ok, reply}
   end
@@ -41,20 +46,25 @@ defmodule Tracer.Utils do
 
   def load_modules(node, module_list \\ [Tracer.Utils]) do
     data = for m <- module_list, do: :code.get_object_code(m)
+
     for {m, object_code, filename} <- data do
       ## We need to use :rpc, because on remote node our code may be not loaded and not exists
       {:module, _} = :rpc.call(node, :code, :load_binary, [m, filename, object_code])
     end
+
     true
   end
 
   def rpc(node, module, function, args, timeout \\ 5000) do
     tag = make_ref()
-    pid = if node() == node do
-            spawn(Tracer.Utils, :rpc_local, [self(), tag, module, function, args])
-          else
-            :erlang.spawn(node, Tracer.Utils, :rpc_local, [self(), tag, module, function, args])
-          end
+
+    pid =
+      if node() == node do
+        spawn(Tracer.Utils, :rpc_local, [self(), tag, module, function, args])
+      else
+        :erlang.spawn(node, Tracer.Utils, :rpc_local, [self(), tag, module, function, args])
+      end
+
     mref = Process.monitor(pid)
     waiting({^tag, _}, pid, mref, timeout) |> elem(1)
   end
