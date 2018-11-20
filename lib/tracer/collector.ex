@@ -15,11 +15,11 @@ defmodule Tracer.Collector do
   end
 
   def enable(node, group_leader, limit, processes, trace_options, formatter) do
-    call({__MODULE__, node}, {:enable, group_leader, limit, processes, trace_options, formatter})
+    call!({__MODULE__, node}, {:enable, group_leader, limit, processes, trace_options, formatter})
   end
 
   def trace_pattern(node, pattern) do
-    call({__MODULE__, node}, {:set, pattern})
+    call!({__MODULE__, node}, {:set, pattern})
   end
 
   def stop(node), do: call({__MODULE__, node}, :stop)

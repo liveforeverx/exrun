@@ -1,3 +1,14 @@
+# 0.1.7
+
+* Bug fixes
+  * remove bug in `Runner.processes`
+
+* Enhancements
+  * add `Runner.tabs` function for tables size introspection
+  * add formatted datetime to tracing calls
+  * make default limit higher
+  * trace_off doesn't crash, if tracer is already stoped
+
 # 0.1.6
 
 * Enhancements

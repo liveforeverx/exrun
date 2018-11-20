@@ -2,13 +2,15 @@ defmodule Exrun.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :exrun,
-     version: "0.1.6",
-     source_url: "https://github.com/liveforeverx/exrun",
-     name: "Exrun",
-     deps: deps(),
-     description: description(),
-     package: package()]
+    [
+      app: :exrun,
+      version: "0.1.7",
+      source_url: "https://github.com/liveforeverx/exrun",
+      name: "Exrun",
+      deps: deps(),
+      description: description(),
+      package: package()
+    ]
   end
 
   def application do
@@ -16,8 +18,7 @@ defmodule Exrun.Mixfile do
   end
 
   defp deps do
-    [{:earmark, "~> 1.0", only: :dev},
-     {:ex_doc, "~> 0.10", only: :dev}]
+    [{:earmark, "~> 1.0", only: :dev}, {:ex_doc, "~> 0.10", only: :dev}]
   end
 
   defp description do
@@ -25,8 +26,10 @@ defmodule Exrun.Mixfile do
   end
 
   defp package do
-    [maintainers: ["Dmitry Russ(Aleksandrov)"],
-     licenses: ["Apache 2.0"],
-     links: %{"Github" => "https://github.com/liveforeverx/exrun"}]
+    [
+      maintainers: ["Dmitry Russ(Aleksandrov)"],
+      licenses: ["Apache 2.0"],
+      links: %{"Github" => "https://github.com/liveforeverx/exrun"}
+    ]
   end
 end

@@ -29,18 +29,18 @@ defmodule Tracer.Formatter do
   @doc """
   Format trace message to a string.
   """
-  def format_trace({:trace_ts, pid, :call, mfa, _timestamp}) do
-    "#{inspect(pid)} call #{call_mfa(mfa)}"
+  def format_trace({:trace_ts, pid, :call, mfa, timestamp}) do
+    "#{inspect(pid)} [#{format_time(timestamp)}] call #{call_mfa(mfa)}"
   end
 
-  def format_trace({:trace_ts, pid, :call, mfa, dump, _timestamp}) do
+  def format_trace({:trace_ts, pid, :call, mfa, dump, timestamp}) do
     traces =
       String.split(dump, "\n")
       |> Enum.filter(&Regex.match?(~r/Return addr 0x|CP: 0x/, &1))
       |> fold_over
       |> Enum.reverse()
 
-    "#{inspect(pid)} call #{call_mfa(mfa)}#{traces}"
+    "#{inspect(pid)} [#{format_time(timestamp)}] call #{call_mfa(mfa)}#{traces}"
   end
 
   def format_trace({:trace_ts, pid, :return_from, mfa, return, time}) do
@@ -106,4 +106,22 @@ defmodule Tracer.Formatter do
       _ -> binatom
     end
   end
+
+  defp to_time({_, _, micro} = now) do
+    {_, {hours, minutes, seconds}} = :calendar.now_to_universal_time(now)
+    {hours, minutes, seconds, div(micro, 1000)}
+  end
+
+  def format_time({_, _, _} = now), do: now |> to_time() |> format_time()
+
+  def format_time({hh, mi, ss, ms}) do
+    [pad2(hh), ?:, pad2(mi), ?:, pad2(ss), ?., pad3(ms)]
+  end
+
+  defp pad3(int) when int < 10, do: [?0, ?0, Integer.to_string(int)]
+  defp pad3(int) when int < 100, do: [?0, Integer.to_string(int)]
+  defp pad3(int), do: Integer.to_string(int)
+
+  defp pad2(int) when int < 10, do: [?0, Integer.to_string(int)]
+  defp pad2(int), do: Integer.to_string(int)
 end

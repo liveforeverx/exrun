@@ -21,14 +21,14 @@ defmodule Runner do
   @doc """
   Find n processes, which use the most memory.
   """
-  def processes(n) do
+  def processes(n \\ 10) do
     pids =
       for pid <- :erlang.processes() do
         {pid, id, memory} = process_info(pid, :memory)
         {memory, {pid, id}}
       end
 
-    for {memory, id} <- top(pids, n), do: {id, memory(memory)}
+    for {memory, id} <- top(pids, n), do: {id, format(memory)}
   end
 
   defp top(list, n) do
@@ -37,6 +37,17 @@ defmodule Runner do
     |> Enum.reverse()
     |> Enum.take(n)
   end
+
+  @doc """
+  Find tabs
+  """
+  def tabs(n \\ 10) do
+    tabs = for tab <- :ets.all(), do: {tab_memory(tab), tab}
+
+    for {memory, id} <- top(tabs, n), do: {id, format(memory)}
+  end
+
+  defp tab_memory(tab), do: :ets.info(tab, :memory) * :erlang.system_info(:wordsize)
 
   @doc """
   System memory

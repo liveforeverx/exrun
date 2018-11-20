@@ -9,20 +9,25 @@ defmodule Tracer.Utils do
       receive do
         unquote(answer) = reply ->
           Process.demonitor(unquote(mref), [:flush])
-          reply
+          {:ok, reply}
 
         {:DOWN, ^unquote(mref), _, _, :noconnection} ->
-          IO.inspect({:get_down, :noconnection})
-          exit({:nodedown, node(unquote(process))})
+          {:error, {:nodedown, node(unquote(process))}}
 
         {:DOWN, ^unquote(mref), _, _, reason} ->
-          IO.inspect({:get_down, reason})
-          exit(reason)
+          {:error, reason}
       after
         unquote(timeout) ->
           Process.demonitor(unquote(mref), [:flush])
-          exit(:timeout)
+          {:error, :timeout}
       end
+    end
+  end
+
+  def call!(identifier, request, timeout \\ 10000) do
+    case call(identifier, request, timeout) do
+      {:ok, reply} -> reply
+      {:error, error} -> exit(error)
     end
   end
 
@@ -36,8 +41,7 @@ defmodule Tracer.Utils do
       _, _ -> :ok
     end
 
-    {_, reply} = waiting({^mref, _}, pid, mref, timeout)
-    {:ok, reply}
+    with {:ok, {_, reply}} <- waiting({^mref, _}, pid, mref, timeout), do: {:ok, reply}
   end
 
   defp get_process({name, node}), do: rpc(node, :erlang, :whereis, [name])
@@ -66,7 +70,11 @@ defmodule Tracer.Utils do
       end
 
     mref = Process.monitor(pid)
-    waiting({^tag, _}, pid, mref, timeout) |> elem(1)
+
+    case waiting({^tag, _}, pid, mref, timeout) do
+      {:ok, {_, reply}} -> reply
+      {:error, error} -> exit(error)
+    end
   end
 
   def rpc_local(parent, tag, module, function, args) do

@@ -83,7 +83,7 @@ defmodule Tracer do
 
     limit =
       options[:limit] ||
-        Application.get_env(:exrun, :limit, %{rate: 100, time: 1000}) |> Enum.into(%{})
+        Application.get_env(:exrun, :limit, %{rate: 250, time: 1000}) |> Enum.into(%{})
 
     formatter_options = options |> Keyword.put_new(:formatter_local, false)
     unless Process.get(:__tracer__), do: Process.put(:__tracer__, %{})
