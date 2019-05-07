@@ -24,10 +24,12 @@ defmodule Tracer do
       applied. Default specified by environments. (Default: 1000)
       * `:rate` - specifies the limit of trace messages per time, if trace messages
       will be over this limit, the collectable process will stop and clear all traces.
-      Default specified by environments. (Default: 100)
+      Default specified by environments. (Default: 250)
       * `:overall` - set the absolute limit for messages. After reaching this limit, the
       collactable process will clear all traces and stops. Default specified by environments.
       (Default: nil)
+
+      Additionally limit can be specified as `limit: 5`, than it equivalent to `limit: %{overall: 5}`
 
     * `:formatter_local` - flag for setting, where formatter process should be started.
     If set to `false`, then the formatter process will be started on remote node, if set
@@ -43,9 +45,13 @@ defmodule Tracer do
 
     * `:stack` - stacktrace for the process call should be printed
 
-    * `:exported` - only exported functions should be printed.
+    * `:exported` - only exported functions should be printed
 
     * `:no_return` - no returns should be printed for a calls
+
+    * `:pid` - specify pid, you want to trace, otherwise all processes are traced
+
+    * `io` - specify io process, which should handle io from a tracer
 
   ## Examples
 
@@ -81,19 +87,34 @@ defmodule Tracer do
   def trace_run(compiled_pattern, options \\ []) do
     node = options[:node] || node()
 
-    limit =
-      options[:limit] ||
-        Application.get_env(:exrun, :limit, %{rate: 250, time: 1000}) |> Enum.into(%{})
+    limit = limit_opts(options)
 
-    formatter_options = options |> Keyword.put_new(:formatter_local, false)
+    formatter_options = Keyword.put_new(options, :formatter_local, false)
     unless Process.get(:__tracer__), do: Process.put(:__tracer__, %{})
 
     check_node(node, formatter_options)
     Collector.ensure_started(node)
 
     {:group_leader, group_leader} = Process.info(self(), :group_leader)
-    Collector.enable(node, group_leader, limit, :all, [:call, :timestamp], formatter_options)
+    io = options[:io] || group_leader
+
+    process_spec = options[:pid] || :all
+    trace_opts = [:call, :timestamp]
+
+    Collector.enable(node, io, limit, process_spec, trace_opts, formatter_options)
     Collector.trace_pattern(node, compiled_pattern)
+  end
+
+  defp limit_opts(options) do
+    case options[:limit] do
+      nil -> default_limit()
+      limit when is_integer(limit) -> Map.merge(default_limit(), %{overall: limit})
+      limit when is_map(limit) -> limit
+    end
+  end
+
+  defp default_limit() do
+    Application.get_env(:exrun, :limit, %{rate: 250, time: 1000}) |> Enum.into(%{})
   end
 
   defp bootstrap(node, formatter_options) do

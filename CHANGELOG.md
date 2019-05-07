@@ -1,5 +1,14 @@
 # 0.1.7
 
+* Enhancements
+  * add `limit: number` as shortcut for `limit: %{overall: number}`
+  * update collector to work again in Erlang nodes without Elixir
+  * add `pid` option to trace specific processes
+  * add possibility to write traces to file, via `io` option
+  * print locally, when tracer reached limit and flush remaining messages before stoping processes
+
+# 0.1.7
+
 * Bug fixes
   * remove bug in `Runner.processes`
 
