@@ -81,4 +81,10 @@ defmodule Tracer.Utils do
     result = apply(module, function, args)
     send(parent, {tag, result})
   end
+
+  def apply_func(func, arguments \\ [])
+
+  def apply_func(func, arguments) when not is_list(arguments), do: apply_func(func, List.wrap(arguments))
+  def apply_func({m, f, opts}, arguments), do: apply(m, f, arguments ++ opts)
+  def apply_func(fun, arguments), do: apply(fun, arguments)
 end

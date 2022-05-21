@@ -26,7 +26,7 @@ system.
 Setup project and app dependency in your mix.exs:
 
 ```elixir
-{:exrun, "~> 0.1.0"}
+{:exrun, "~> 0.2.0"}
 ```
 
 With remsh ( and with CLI in future ) it possible to trace nodes, where elixir or exrun are not installed, as it build to
@@ -35,9 +35,9 @@ remote check and load modules needed (with option `formatter_local: false` only 
 ## Example
 
 ```elixir
-iex(1)> import Tracer
+iex(1)> use Tracer, node: my_remote_node, limit: %{rate: 1000, time: 1000}
 nil
-iex(2)> trace :lists.seq(a, b) when a < 1 and b > 100, node: my_remote_node, limit: %{rate: 1000, time: 1000}
+iex(2)> trace :lists.seq(a, b) when a < 1 and b > 100
 {:ok, 2}
 iex(3)> :lists.seq(0, 110)
 #PID<0.68.0> [17:35:23.118] call :lists.seq(0, 110)
@@ -60,7 +60,8 @@ iex(5)> Tuple.duplicate(:hello, 3)
 More documentation you should refer
 
 ```elixir
-iex(1)> h Tracer.trace
+iex(1)> h Tracer
+iex(2)> h Tracer.trace
 ```
 
 ## Feature Roadmap
@@ -78,11 +79,12 @@ iex(1)> h Tracer.trace
     - [x] format stacktrace
     - [x] custom formatter
     - [x] possibility to add timestamp to default formatter
+    - [x] possibility to pass inspect options
   - Distributed
     - [x] distributed tracing
     - [x] erlang distributed transport
     - [ ] environments-based configuration (for easily multinode setup)
-    - [x] io output
+    - [x] io output with file shortcut
     - [x] possibility to implement own transports(like file, tcp, zeromq), use formatters
   - [x] time feature  (Example, every 1 minute should be time printed or trace messages with, for correlation with other logs and so on)
   - [x] overflow protection as an option

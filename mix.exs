@@ -4,7 +4,7 @@ defmodule Exrun.Mixfile do
   def project do
     [
       app: :exrun,
-      version: "0.1.8",
+      version: "0.2.0",
       source_url: "https://github.com/liveforeverx/exrun",
       name: "Exrun",
       deps: deps(),
@@ -18,7 +18,7 @@ defmodule Exrun.Mixfile do
   end
 
   defp deps do
-    [{:earmark, "~> 1.0", only: :dev}, {:ex_doc, "~> 0.10", only: :dev}]
+    [{:earmark, "~> 1.4", only: :dev}, {:ex_doc, "~> 0.28", only: :dev}]
   end
 
   defp description do

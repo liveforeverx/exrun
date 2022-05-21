@@ -2,31 +2,43 @@ defmodule Tracer.Collector do
   alias Tracer.Formatter
   import Tracer.Utils
 
-  def ensure_started(node) do
+  def ensure_started(node, unlink?) do
     case rpc(node, :erlang, :whereis, [__MODULE__]) do
-      pid when is_pid(pid) -> pid
-      :undefined -> start(node)
+      pid when is_pid(pid) -> {:already_started, pid}
+      :undefined -> {:started, start(node, unlink?)}
     end
   end
 
-  def start(node \\ node()) do
+  def start(node \\ node(), unlink?) do
     local? = node == node()
-    pid = :erlang.spawn(node, __MODULE__, :init, [{self(), local?}])
+    pid = :erlang.spawn(node, __MODULE__, :init, [{self(), local?, unlink?}])
     {rpc(node, :erlang, :register, [__MODULE__, pid]), node}
   end
 
-  def enable(node, io, limit, processes, trace_options, formatter) do
-    call!({__MODULE__, node}, {:enable, io, limit, processes, trace_options, formatter})
+  def configure(node, io, limit, formatter) do
+    call({__MODULE__, node}, {:configure, io, limit, formatter})
+  end
+
+  def trace(node, processes, trace_options) do
+    call({__MODULE__, node}, {:trace, processes, trace_options})
   end
 
   def trace_pattern(node, pattern) do
-    call!({__MODULE__, node}, {:set, pattern})
+    call({__MODULE__, node}, {:set, pattern})
+  end
+
+  def trace_and_set(node, processes, trace_options, pattern) do
+    call({__MODULE__, node}, {:trace_and_set, processes, trace_options, pattern})
+  end
+
+  def status(node) do
+    call({__MODULE__, node}, :status)
   end
 
   def stop(node), do: call({__MODULE__, node}, :stop)
 
-  def init({parent, local?}) do
-    :erlang.monitor(:process, parent)
+  def init({parent, local?, unlink?}) do
+    unless unlink?, do: :erlang.monitor(:process, parent)
 
     loop(%{
       parent: parent,
@@ -60,24 +72,27 @@ defmodule Tracer.Collector do
     end
   end
 
-  def handle_call({:enable, io, new_limit, processes, trace_options, formatter_opts}, state) do
-    %{formatter: formatter, limit: limit} = state
-    :erlang.trace(processes, true, [{:tracer, self()} | trace_options])
+  def handle_call({:configure, io, new_limit, formatter_opts}, %{formatter: formatter, limit: limit} = state) do
+    new_limit = :maps.merge(limit, new_limit)
+    {:reply, :ok, %{state | formatter: start_formatter(formatter, io, formatter_opts), io: io, limit: new_limit}}
+  end
 
-    {:reply, :ok,
-     %{
-       state
-       | formatter: start_formatter(formatter, io, formatter_opts),
-         io: io,
-         limit: :maps.merge(limit, new_limit)
-     }}
+  def handle_call({:trace, processes, trace_options}, state) do
+    :erlang.trace(processes, true, [{:tracer, self()} | trace_options])
+    {:reply, :ok, state}
   end
 
   def handle_call({:set, pattern}, state) do
-    {{module, _, _} = pattern, match_options, global_options} = pattern
-    module.module_info()
-    result = :erlang.trace_pattern(pattern, match_options, global_options)
-    {:reply, result, state}
+    {:reply, set_pattern(pattern), state}
+  end
+
+  def handle_call({:trace_and_set, processes, trace_options, pattern}, state) do
+    :erlang.trace(processes, true, [{:tracer, self()} | trace_options])
+    {:reply, set_pattern(pattern), state}
+  end
+
+  def handle_call(:status, state) do
+    {:reply, state, state}
   end
 
   def handle_call(:stop, state) do
@@ -96,6 +111,15 @@ defmodule Tracer.Collector do
         exit({:shutdown, reason})
     after
       5000 -> exit({:shutdown, reason})
+    end
+  end
+
+  defp set_pattern(pattern) do
+    {{module, _, _} = pattern, match_options, global_options} = pattern
+
+    case :code.ensure_loaded(module) do
+      {:module, ^module} -> :erlang.trace_pattern(pattern, match_options, global_options)
+      {:error, _} = error -> error
     end
   end
 
@@ -162,11 +186,17 @@ defmodule Tracer.Collector do
   end
 
   defp start_formatter(nil, io, options) do
+    formatter =
+      with nil <- options[:formatter] do
+        opts = Keyword.put_new(options[:format_opts] || [], :structs, false)
+        {Formatter.Base, :format_trace, [opts]}
+      end
+
     if options[:formatter_local] do
       node = :erlang.node(io)
-      :erlang.spawn_link(node, Formatter, :init, [io, options[:formatter]])
+      :erlang.spawn_link(node, Formatter, :init, [io, formatter])
     else
-      Formatter.start_link(io, options[:formatter])
+      Formatter.start_link(io, formatter)
     end
   end
 

@@ -1,3 +1,17 @@
+# 0.2.0
+
+This has backwards-incompatible changes.
+
+The `trace` was splitted to `use Tracer`, which starts and configure tracer and `trace` macro,
+which actually set tracer and pattern.
+
+* Enhancements
+  * redesign the start and trace to be used with `use Tracer` and `trace`
+  * redesign, how `:io` works and add option `:file` for easier file tracing
+  * add `unlink` option for file and network tracing
+  * do not crash on tracing non-existing module
+  * by starting of tracer reports if there was already one running or new one started
+
 # 0.1.7
 
 * Enhancements
