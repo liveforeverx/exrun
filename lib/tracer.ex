@@ -237,6 +237,13 @@ defmodule Tracer do
   @doc """
   Stop tracing
   """
+  def clear_traces(options \\ []) do
+    Collector.clear_traces(options[:node] || node())
+  end
+
+  @doc """
+  Stop tracing
+  """
   def trace_off(options \\ []) do
     Collector.stop(options[:node] || node())
   end

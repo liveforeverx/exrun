@@ -31,10 +31,8 @@ defmodule Tracer.Collector do
     call({__MODULE__, node}, {:trace_and_set, processes, trace_options, pattern})
   end
 
-  def status(node) do
-    call({__MODULE__, node}, :status)
-  end
-
+  def status(node), do: call({__MODULE__, node}, :status)
+  def clear_traces(node), do: call({__MODULE__, node}, :clear_traces)
   def stop(node), do: call({__MODULE__, node}, :stop)
 
   def init({parent, local?, unlink?}) do
@@ -95,14 +93,22 @@ defmodule Tracer.Collector do
     {:reply, state, state}
   end
 
+  def handle_call(:clear_traces, state) do
+    {:reply, clear_traces(), state}
+  end
+
   def handle_call(:stop, state) do
     {:stop, :ok, state}
   end
 
-  def stop(reason, %{local?: local?, formatter: formatter}) do
+  defp clear_traces() do
     :erlang.trace(:all, false, [:all])
     :erlang.trace_pattern({:_, :_, :_}, false, [:local, :meta, :call_count, :call_time])
     :erlang.trace_pattern({:_, :_, :_}, false, [])
+  end
+
+  def stop(reason, %{local?: local?, formatter: formatter}) do
+    clear_traces()
     send(formatter, {:flush, self()})
 
     receive do

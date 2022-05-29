@@ -1,3 +1,8 @@
+# 0.2.1
+
+* Enhancements
+  * add `clear_traces` function to clear traces, but not stop a tracer
+
 # 0.2.0
 
 This has backwards-incompatible changes.
