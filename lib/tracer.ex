@@ -38,7 +38,8 @@ defmodule Tracer do
     traces there should be loaded at least all Inspect modules.
 
     * `:formatter` - own formatter function, example because you try to trace different
-    inspect function. Formatter is either a fun or tuple `{module, function, opts}`.
+    inspect function. Formatter is either a fun or tuple `{module, function, opts}` or module, which implements
+    function `format_trace/2` (see reference implementation: `Tracer.Formatter.Base`).
 
     * `:format_opts` - any format options, which will be passed to `inspect/2`. Per default structs
     are disabled.

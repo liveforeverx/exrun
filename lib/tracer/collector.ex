@@ -192,11 +192,7 @@ defmodule Tracer.Collector do
   end
 
   defp start_formatter(nil, io, options) do
-    formatter =
-      with nil <- options[:formatter] do
-        opts = Keyword.put_new(options[:format_opts] || [], :structs, false)
-        {Formatter.Base, :format_trace, [opts]}
-      end
+    formatter = get_formatter_opt(options)
 
     if options[:formatter_local] do
       node = :erlang.node(io)
@@ -207,7 +203,16 @@ defmodule Tracer.Collector do
   end
 
   defp start_formatter(formatter, _io, options) do
-    if new_formatter = options[:formatter], do: send(formatter, {:formatter, new_formatter})
+    if options[:formatter], do: send(formatter, {:formatter, get_formatter_opt(options)})
     formatter
+  end
+
+  defp get_formatter_opt(options) do
+    formatter = with nil <- options[:formatter], do: Formatter.Base
+
+    with module when is_atom(module) <- formatter do
+      opts = Keyword.put_new(options[:format_opts] || [], :structs, false)
+      {module, :format_trace, [opts]}
+    end
   end
 end
